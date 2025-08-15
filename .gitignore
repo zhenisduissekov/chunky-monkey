@@ -1,6 +1,9 @@
 # Ignore articles directory and all its contents
 articles/
 
+# Ignore local state file for delta detection
+article_hashes.json
+
 # Ignore task folder and all its contents
 task/
 
