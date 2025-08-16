@@ -1,13 +1,4 @@
-"""
-requirements.txt
 
-This file lists all Python dependencies required to run the chunky-monkey project.
-Dependencies include libraries for HTTP requests, HTML parsing, Markdown conversion,
-environment variable management, logging, and OpenAI API interaction.
-
-To install dependencies:
-    pip install -r requirements.txt
-"""
 
 # HTTP requests
 requests
@@ -21,6 +12,7 @@ markdownify
 
 # Environment variable management
 python-dotenv
+croniter
 
 # Logging (standard library, but can add rich for better logs)
 rich
@@ -30,3 +22,6 @@ openai
 
 # Scheduling (for local testing, not needed in production on App Platform)
 schedule
+
+# Testing
+pytest

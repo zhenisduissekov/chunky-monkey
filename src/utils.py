@@ -3,9 +3,148 @@ utils.py
 
 This module provides utility functions for the chunky-monkey project, including:
 
-- Hashing: Functions to generate hashes for article content to detect changes (deltas).
-- Logging: Centralized logging setup for consistent log output across modules.
-- Environment Variable Loading: Securely loads and validates required environment variables from .env files.
+- Environment variable loading and validation
+- Centralized logging setup (console and file)
+- Hashing utilities for delta detection
 
-These utilities are designed to be imported and used by other modules in the project to ensure modularity and code reuse.
+All functions are designed to be imported and used by other modules in the project.
 """
+
+import os
+import sys
+import hashlib
+import json
+import os
+from pathlib import Path
+from pathlib import Path
+from typing import Dict, Any, Optional
+
+from dotenv import load_dotenv
+
+import logging
+from logging.handlers import RotatingFileHandler
+
+# Optional: Use rich for pretty logs if available
+try:
+    from rich.logging import RichHandler
+    RICH_AVAILABLE = True
+except ImportError:
+    RICH_AVAILABLE = False
+
+# --- Environment Variable Loader ---
+
+REQUIRED_ENV_VARS = [
+    "OPENAI_API_KEY",
+    "OPENAI_ASSISTANT_ID",
+    "KNOWLEDGE_BASE_API_URL",
+]
+
+OPTIONAL_ENV_VARS = {
+    "LOG_LEVEL": "INFO",
+    "KNOWLEDGE_BASE_PAGE_SIZE": "10",
+}
+
+def load_env(dotenv_path: Optional[str] = None) -> Dict[str, Any]:
+    """
+    Loads environment variables from a .env file and validates required variables.
+    Returns a dictionary of config values.
+    """
+    if dotenv_path is None:
+        dotenv_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), ".env")
+    load_dotenv(dotenv_path)
+
+    config = {}
+    missing = []
+    for var in REQUIRED_ENV_VARS:
+        value = os.getenv(var)
+        if value is None or value.strip() == "":
+            missing.append(var)
+        else:
+            config[var] = value
+
+    for var, default in OPTIONAL_ENV_VARS.items():
+        config[var] = os.getenv(var, default)
+
+    if missing:
+        raise EnvironmentError(
+            f"Missing required environment variables: {', '.join(missing)}. "
+            f"Please set them in your .env file."
+        )
+    return config
+
+# --- Logging Setup ---
+
+def setup_logging(log_level: str = "INFO", log_file: str = "logs/app.log") -> logging.Logger:
+    """
+    Sets up logging to both console and a rotating file.
+    Returns a logger instance.
+    """
+    log_dir = Path(log_file).parent
+    log_dir.mkdir(parents=True, exist_ok=True)
+
+    logger = logging.getLogger("chunky-monkey")
+    logger.setLevel(getattr(logging, log_level.upper(), logging.INFO))
+    logger.propagate = False  # Prevent double logging
+
+    # Remove any existing handlers
+    if logger.hasHandlers():
+        logger.handlers.clear()
+
+    # Console handler (Rich if available)
+    if RICH_AVAILABLE:
+        console_handler = RichHandler(rich_tracebacks=True, show_time=True, show_level=True, show_path=False)
+    else:
+        console_handler = logging.StreamHandler(sys.stdout)
+        console_formatter = logging.Formatter(
+            "[%(asctime)s] %(levelname)s %(name)s: %(message)s", "%Y-%m-%d %H:%M:%S"
+        )
+        console_handler.setFormatter(console_formatter)
+    logger.addHandler(console_handler)
+
+    # Rotating file handler
+    file_handler = RotatingFileHandler(log_file, maxBytes=1_000_000, backupCount=3)
+    file_formatter = logging.Formatter(
+        "[%(asctime)s] %(levelname)s %(name)s: %(message)s", "%Y-%m-%d %H:%M:%S"
+    )
+    file_handler.setFormatter(file_formatter)
+    logger.addHandler(file_handler)
+
+    return logger
+
+# --- Hashing Utilities ---
+
+def hash_content(content: str) -> str:
+    """
+    Returns a SHA-256 hash of the given string content.
+    Used for delta detection (new/updated articles).
+    """
+    return hashlib.sha256(content.encode("utf-8")).hexdigest()
+
+def hash_file(file_path: str) -> str:
+    """
+    Returns a SHA-256 hash of the file's contents.
+    """
+    h = hashlib.sha256()
+    with open(file_path, "rb") as f:
+        for chunk in iter(lambda: f.read(4096), b""):
+            h.update(chunk)
+    return h.hexdigest()
+
+# --- Example Usage (for testing) ---
+
+if __name__ == "__main__":
+    # Load environment variables and print config
+    try:
+        config = load_env()
+        print("Loaded config:", config)
+    except Exception as e:
+        print("Error loading environment:", e)
+        sys.exit(1)
+
+    # Setup logger and log a test message
+    logger = setup_logging(config.get("LOG_LEVEL", "INFO"))
+    logger.info("Logger initialized successfully.")
+
+    # Test hashing
+    sample = "Hello, chunky-monkey!"
+    logger.info(f"Hash of sample content: {hash_content(sample)}")

@@ -1,4 +1,3 @@
-chunky-monkey/src/__init__.py
 """
 This package contains all modules for the chunky-monkey project.
 
