@@ -229,6 +229,15 @@ Below is a screenshot showing the Assistant correctly answering a sample questio
 > **Article URL:** https://www.optisigns.com/support/how-to-display-youtube-video-on-your-digital-signage
 
 All screenshots and demo images are stored in the `assets/` folder.
+
+---
+
+## DigitalOcean Runtime Logs
+
+Below is a screenshot showing logs from the DigitalOcean Runtime logs interface:
+
+![DigitalOcean Runtime Logs](assets/Screenshot%202025-08-16%20at%2022.57.37.png)
+
 ---
 
 ## Tests
