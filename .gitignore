@@ -1,5 +1,5 @@
 # Ignore articles directory and all its contents
-articles/
+articles/*
 
 # Ignore local state file for delta detection
 article_hashes.json
