@@ -31,7 +31,12 @@ from markdown_converter import clean_html, html_to_markdown, slugify, article_to
 import os
 
 def save_articles_as_markdown(articles, output_dir="articles"):
-    os.makedirs(output_dir, exist_ok=True)
+    import os
+    try:
+        os.makedirs(output_dir, exist_ok=True)
+    except PermissionError as e:
+        print(f"Permission denied while creating directory '{output_dir}': {e}", flush=True)
+        raise
     for i, article in enumerate(articles):
         title = article.get("title", f"article_{i}")
         slug = slugify(title)
