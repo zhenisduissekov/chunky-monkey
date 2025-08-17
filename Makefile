@@ -52,7 +52,8 @@ docker-build:
 
 # Build Docker image for linux/amd64 (for cloud platforms like DigitalOcean)
 docker-build-linux:
-	docker build --platform linux/amd64 -t chunky-monkey .
+	docker build --platform linux/amd64 \
+		-t $(user)/chunky-monkey:latest -t $(user)/chunky-monkey:$(v) .
 
 # Run the app in Docker (requires .env in project root)
 docker-run:

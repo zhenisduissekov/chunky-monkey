@@ -1,5 +1,6 @@
 from unittest.mock import patch
-from src.markdown_converter import clean_html, html_to_markdown, slugify
+from src.scraper import fetch_articles, save_articles_as_markdown
+
 
 @patch("src.scraper.requests.Session.get")
 def test_fetch_and_save_articles(mock_get, tmp_path):
