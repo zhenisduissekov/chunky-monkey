@@ -216,7 +216,7 @@ chunky-monkey/
 
 Below is a screenshot showing the Assistant correctly answering a sample question with citations:
 
-![Playground Answer](assets/Screenshot%202025-08-15%20at%2016.48.56.png)
+![Playground Answer](assets/Screenshot%202025-08-16%20at%2022.39.48.png)
 
 **Sample Q&A:**
 
