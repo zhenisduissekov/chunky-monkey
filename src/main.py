@@ -107,7 +107,7 @@ def main():
 
     print(f"Found {len(added) + len(updated)} new or updated articles:")
     for f in added + updated:
-        print(f"  - {f.name}")
+        # print(f"  - {f.name}")
 
     # 3. Upload (calls uploader, which uploads all .md files in articles/)
     run_uploader()
@@ -131,12 +131,18 @@ def main():
 def cleanup_articles_dir():
     """Delete all Markdown files in the articles directory."""
     print("Cleaning up articles directory...")
+    deleted_count = 0
+    error_count = 0
+    total_files = 0
     for md_file in ARTICLES_DIR.glob("*.md"):
+        total_files += 1
         try:
             md_file.unlink()
-            print(f"Deleted {md_file.name}")
+            deleted_count += 1
         except Exception as e:
             print(f"Failed to delete {md_file.name}: {e}")
+            error_count += 1
+    print(f"Tried to delete {total_files} files. Deleted: {deleted_count}. Failed: {error_count}.")
 
 import time
 
