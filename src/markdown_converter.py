@@ -1,13 +1,16 @@
 """
 markdown_converter.py
 
-This module provides functions to clean HTML content and convert it to Markdown,
-preserving important structure (headings, code blocks, links) and removing unwanted
-elements (navigation, ads, etc.).
+This module provides functions to:
+- Clean HTML content and convert it to Markdown,
+- Convert a full article dict to Markdown, preserving all fields exactly (key-to-key, value-to-value, word-for-word).
+  - HTML fields are converted to Markdown, all other fields are output as key: value or JSON code blocks.
+  - No information is lost, renamed, or interpreted.
 
 Usage:
     - clean_html(html_content): Remove nav/ads/unwanted elements from HTML.
     - html_to_markdown(html_content): Convert cleaned HTML to Markdown.
+    - article_to_markdown(article_dict): Convert a full article dict to Markdown, preserving all fields.
 
 Dependencies:
     - beautifulsoup4
@@ -100,6 +103,52 @@ def slugify(title: str) -> str:
     slug = re.sub(r'[^a-z0-9]+', '_', slug)
     slug = slug.strip('_')
     return slug[:50]  # Limit length for filesystem safety
+
+def article_to_markdown(article: dict) -> str:
+    """
+    Converts a full article dict to Markdown, preserving all fields exactly.
+    HTML fields are converted to Markdown, all others are output as key: value or JSON code blocks.
+    No information is lost, renamed, or interpreted.
+
+    Additionally, prepends the canonical Article URL line (using html_url) at the top,
+    and duplicates it at the start of every chunk (by prepending to the Markdown output).
+    """
+    import json
+
+    lines = []
+    html_url = article.get("html_url")
+    url_line = f"Article URL: {html_url}" if html_url else ""
+
+    # Title as top-level header if present
+    title = article.get("title") or article.get("name")
+    if title:
+        lines.append(f"# {title}\n")
+    # Output all fields
+    for key, value in article.items():
+        if key == "body" and isinstance(value, str):
+            # Convert HTML body to Markdown
+            lines.append(f"## {key}\n")
+            lines.append(html_to_markdown(value))
+        elif isinstance(value, (dict, list)):
+            # Output nested structures as pretty JSON in a code block
+            lines.append(f"## {key}\n")
+            lines.append("```json")
+            lines.append(json.dumps(value, indent=2, ensure_ascii=False))
+            lines.append("```")
+        else:
+            # Output simple fields as key: value
+            lines.append(f"**{key}:** {value}")
+
+    # Join all lines for the final Markdown output
+    markdown = "\n\n".join(lines)
+
+    # Insert the Article URL line before every paragraph (double newline)
+    if url_line:
+        paragraphs = markdown.split("\n\n")
+        paragraphs_with_url = [f"{url_line}\n\n{p}" if p.strip() else "" for p in paragraphs]
+        markdown = "\n\n".join(paragraphs_with_url)
+
+    return markdown
 
 # Example usage for testing
 if __name__ == "__main__":

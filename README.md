@@ -67,6 +67,59 @@ make docker-build
 make docker-run
 ```
 
+---
+
+### 🐳 Run with Docker (All Environment Variables)
+
+You can run this service in a single command using Docker.  
+Just replace the environment variable values as needed:
+
+```sh
+docker run \
+  -e OPENAI_API_KEY=your-openai-api-key \
+  -e ASSISTANT_ID=your-assistant-id \
+  -e KNOWLEDGE_BASE_API_URL=https://support.optisigns.com/api/v2/help_center/en-us/articles.json \
+  -e KNOWLEDGE_BASE_PAGE_SIZE=1 \
+  -e KNOWLEDGE_BASE_FILE_NUMBER=14 \
+  -e LOG_LEVEL=INFO \
+  -e SCRAPE_PERIOD="* * * * *" \
+  your-dockerhub-username/your-image-name:latest
+```
+
+**Replace:**
+- `your-openai-api-key` with your actual OpenAI API key.
+- `your-assistant-id` with your OpenAI Assistant ID.
+- Adjust `KNOWLEDGE_BASE_API_URL`, `KNOWLEDGE_BASE_PAGE_SIZE`, `KNOWLEDGE_BASE_FILE_NUMBER`, `LOG_LEVEL`, and `SCRAPE_PERIOD` as needed for your deployment.
+- `your-dockerhub-username/your-image-name:latest` with your actual Docker image name and tag.
+
+#### Example (run every hour):
+
+```sh
+docker run \
+  -e OPENAI_API_KEY=sk-... \
+  -e ASSISTANT_ID=asst_... \
+  -e KNOWLEDGE_BASE_API_URL=https://support.optisigns.com/api/v2/help_center/en-us/articles.json \
+  -e KNOWLEDGE_BASE_PAGE_SIZE=1 \
+  -e KNOWLEDGE_BASE_FILE_NUMBER=14 \
+  -e LOG_LEVEL=INFO \
+  -e SCRAPE_PERIOD="0 * * * *" \
+  johndoe/chunky-monkey:latest
+```
+
+#### Required Environment Variables
+
+| Variable                   | Description                                                        |
+|----------------------------|--------------------------------------------------------------------|
+| `OPENAI_API_KEY`           | Your OpenAI API key (required for uploading to Vector Store)        |
+| `ASSISTANT_ID`             | The ID of your OpenAI Assistant                                    |
+| `KNOWLEDGE_BASE_API_URL`   | Knowledge base API endpoint (e.g., Zendesk articles endpoint)       |
+| `KNOWLEDGE_BASE_PAGE_SIZE` | Number of articles per page to fetch from the knowledge base        |
+| `KNOWLEDGE_BASE_FILE_NUMBER` | Number of files to process per run                                |
+| `LOG_LEVEL`                | Log level (e.g., INFO, DEBUG)                                      |
+| `SCRAPE_PERIOD`            | Cron schedule for running the scraper (e.g., `0 0 * * *` for daily) |
+
+---
+
 - **Important:** If you are deploying to a cloud platform (like DigitalOcean), you must build your Docker image for the correct architecture (linux/amd64). On Apple Silicon (M1/M2) or ARM machines, use:
   ```sh
   make docker-build-linux
@@ -110,14 +163,12 @@ make docker-run
 
 ## Chunking Strategy
 
-When uploading Markdown documentation to the OpenAI Vector Store, each file is split into smaller "chunks" to optimize retrieval and embedding. Our chunking strategy is as follows:
+**Note:** Chunking is currently **not applied** in this service for three reasons:
+- To keep the implementation simple and robust.
+- To ensure that article URLs remain relatable and visible in every file.
+- Because the files being uploaded are not large enough to require chunking at this stage.
 
-- **Paragraph-based:** Each Markdown file is split into chunks at every double newline (`\n\n`), which typically separates paragraphs.
-- **Chunk size limit:** Each chunk is capped at approximately 500 characters. If a paragraph would cause a chunk to exceed this limit, a new chunk is started.
-- **Why this approach?** Paragraph-based chunking preserves logical context and ensures that each chunk is neither too large (which could dilute relevance) nor too small (which could lose context).
-- **Benefits:** This strategy balances retrieval accuracy and context, making it more likely that relevant information is returned in response to user queries.
-
-The script logs the number of files and total chunks embedded after each upload session.
+If chunking becomes necessary in the future (for larger files or more advanced retrieval), this strategy can be revisited.
 
 ---
 

@@ -1,7 +1,5 @@
-import pytest
-from unittest.mock import patch, MagicMock
-from pathlib import Path
-from src.scraper import fetch_articles, save_articles_as_markdown
+from unittest.mock import patch
+from src.markdown_converter import clean_html, html_to_markdown, slugify
 
 @patch("src.scraper.requests.Session.get")
 def test_fetch_and_save_articles(mock_get, tmp_path):
@@ -21,7 +19,7 @@ def test_fetch_and_save_articles(mock_get, tmp_path):
     }
 
     # Fetch articles (should use the mocked response)
-    articles = fetch_articles(min_articles=2)
+    articles = fetch_articles()
     assert len(articles) == 2
     assert articles[0]["title"] == "Test Article"
     assert articles[1]["title"] == "Another Article"

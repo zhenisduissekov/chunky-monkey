@@ -117,8 +117,16 @@ def main():
         json.dump(new_hashes, f, indent=2)
     print("Hash record updated.")
 
+    # 5. Save names of all Markdown files in articles/ to article_names_sample.txt
+    article_names_path = Path(__file__).parent.parent / "article_names_sample.txt"
+    md_names = sorted([md_file.name for md_file in ARTICLES_DIR.glob("*.md")])
+    with open(article_names_path, "w") as f:
+        for name in md_names:
+            f.write(name + "\n")
+    print(f"Saved {len(md_names)} article names to {article_names_path}")
+
     # 5. Cleanup articles directory
-    cleanup_articles_dir()
+    # cleanup_articles_dir()
 
 def cleanup_articles_dir():
     """Delete all Markdown files in the articles directory."""

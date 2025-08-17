@@ -22,7 +22,7 @@ test-upload:
 
 # Test the scraper module
 test-scraper:
-	. venv/bin/activate && python src/scraper.py
+	PYTHONPATH=. . venv/bin/activate && pytest tests/test_scraper.py -v
 
 # Remove venv, __pycache__, and generated files (teardown)
 clean:
