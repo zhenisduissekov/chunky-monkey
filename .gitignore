@@ -1,5 +1,6 @@
 # Ignore articles directory and all its contents
-articles/
+articles/*
+!articles/.gitkeep
 
 # Ignore local state file for delta detection
 article_hashes.json
