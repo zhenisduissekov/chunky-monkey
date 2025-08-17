@@ -19,6 +19,9 @@ Dependencies:
 Author: chunky-monkey team
 """
 
+from utils import setup_logging
+markdown_logger = setup_logging(log_level="ERROR", log_file="logs/markdown_errors.log")
+
 from bs4 import BeautifulSoup
 from markdownify import markdownify as md
 import re
@@ -37,30 +40,35 @@ def clean_html(html_content: str) -> str:
     Returns:
         str: Cleaned HTML string.
     """
-    soup = BeautifulSoup(html_content, "lxml")
+    try:
+        soup = BeautifulSoup(html_content, "lxml")
 
-    # Remove <nav>, <footer>, <aside>, and elements with common ad/nav classes/ids
-    for tag in soup.find_all(['nav', 'footer', 'aside']):
-        tag.decompose()
-
-    # Remove elements with ad/nav-related class or id
-    for selector in [
-        '[class*="nav"]', '[id*="nav"]',
-        '[class*="footer"]', '[id*="footer"]',
-        '[class*="ad"]', '[id*="ad"]',
-        '[class*="banner"]', '[id*="banner"]',
-        '[class*="sidebar"]', '[id*="sidebar"]'
-    ]:
-        for tag in soup.select(selector):
+        # Remove <nav>, <footer>, <aside>, and elements with common ad/nav classes/ids
+        for tag in soup.find_all(['nav', 'footer', 'aside']):
             tag.decompose()
 
-    # Optionally, remove empty elements
-    for tag in soup.find_all():
-        if not tag.text.strip() and tag.name not in ['img', 'br', 'hr']:
-            tag.decompose()
+        # Remove elements with ad/nav-related class or id
+        for selector in [
+            '[class*="nav"]', '[id*="nav"]',
+            '[class*="footer"]', '[id*="footer"]',
+            '[class*="ad"]', '[id*="ad"]',
+            '[class*="banner"]', '[id*="banner"]',
+            '[class*="sidebar"]', '[id*="sidebar"]'
+        ]:
+            for tag in soup.select(selector):
+                tag.decompose()
 
-    # Return cleaned HTML as string
-    return str(soup)
+        # Optionally, remove empty elements
+        for tag in soup.find_all():
+            tag_name = getattr(tag, "name", None)
+            if not tag.text.strip() and tag_name not in ['img', 'br', 'hr']:
+                tag.decompose()
+
+        # Return cleaned HTML as string
+        return str(soup)
+    except Exception as e:
+        markdown_logger.error(f"Error cleaning HTML content: {e}", exc_info=True)
+        raise
 
 def html_to_markdown(html_content: str) -> str:
     """
@@ -73,21 +81,25 @@ def html_to_markdown(html_content: str) -> str:
     Returns:
         str: Markdown string.
     """
-    # markdownify options:
-    # - heading_style: 'ATX' for #, ##, etc.
-    # - code_language: None (don't force language)
-    # - strip: False (don't strip whitespace)
-    # - bullets: '*' for unordered lists
-    markdown = md(
-        html_content,
-        heading_style="ATX",
-        bullets="*",
-        strip=["style", "script"]
-    )
+    try:
+        # markdownify options:
+        # - heading_style: 'ATX' for #, ##, etc.
+        # - code_language: None (don't force language)
+        # - strip: False (don't strip whitespace)
+        # - bullets: '*' for unordered lists
+        markdown = md(
+            html_content,
+            heading_style="ATX",
+            bullets="*",
+            strip=["style", "script"]
+        )
 
-    # Optionally, clean up excessive blank lines
-    markdown = re.sub(r'\n{3,}', '\n\n', markdown).strip()
-    return markdown
+        # Optionally, clean up excessive blank lines
+        markdown = re.sub(r'\n{3,}', '\n\n', markdown).strip()
+        return markdown
+    except Exception as e:
+        markdown_logger.error(f"Error converting HTML to Markdown: {e}", exc_info=True)
+        raise
 
 def slugify(title: str) -> str:
     """
@@ -99,10 +111,14 @@ def slugify(title: str) -> str:
     Returns:
         str: Slugified string.
     """
-    slug = title.lower()
-    slug = re.sub(r'[^a-z0-9]+', '_', slug)
-    slug = slug.strip('_')
-    return slug[:50]  # Limit length for filesystem safety
+    try:
+        slug = title.lower()
+        slug = re.sub(r'[^a-z0-9]+', '_', slug)
+        slug = slug.strip('_')
+        return slug[:50]  # Limit length for filesystem safety
+    except Exception as e:
+        markdown_logger.error(f"Error slugifying title '{title}': {e}", exc_info=True)
+        raise
 
 def article_to_markdown(article: dict) -> str:
     """
@@ -114,41 +130,43 @@ def article_to_markdown(article: dict) -> str:
     and duplicates it at the start of every chunk (by prepending to the Markdown output).
     """
     import json
+    try:
+        lines = []
+        html_url = article.get("html_url")
+        url_line = f"Article URL: {html_url}" if html_url else ""
 
-    lines = []
-    html_url = article.get("html_url")
-    url_line = f"Article URL: {html_url}" if html_url else ""
+        # Title as top-level header if present
+        title = article.get("title") or article.get("name")
+        if title:
+            lines.append(f"# {title}\n")
+            if url_line:
+                lines.append(url_line)  # Article URL before title
 
-    # Title as top-level header if present
-    title = article.get("title") or article.get("name")
-    if title:
-        lines.append(f"# {title}\n")
-    # Output all fields
-    for key, value in article.items():
-        if key == "body" and isinstance(value, str):
-            # Convert HTML body to Markdown
-            lines.append(f"## {key}\n")
-            lines.append(html_to_markdown(value))
-        elif isinstance(value, (dict, list)):
-            # Output nested structures as pretty JSON in a code block
-            lines.append(f"## {key}\n")
-            lines.append("```json")
-            lines.append(json.dumps(value, indent=2, ensure_ascii=False))
-            lines.append("```")
-        else:
-            # Output simple fields as key: value
-            lines.append(f"**{key}:** {value}")
+        # Output all fields
+        for key, value in article.items():
+            if key == "body" and isinstance(value, str):
+                if url_line:
+                    lines.append(url_line)  # Article URL before body
+                lines.append(f"## {key}\n")
+                lines.append(html_to_markdown(value))
+                if url_line:
+                    lines.append(url_line)  # Article URL after body
+            elif isinstance(value, (dict, list)):
+                lines.append(f"## {key}\n")
+                lines.append("```json")
+                lines.append(json.dumps(value, indent=2, ensure_ascii=False))
+                lines.append("```")
+            else:
+                lines.append(f"**{key}:** {value}")
 
-    # Join all lines for the final Markdown output
-    markdown = "\n\n".join(lines)
+        if url_line:
+            lines.append(url_line)  # Article URL at the end
 
-    # Insert the Article URL line before every paragraph (double newline)
-    if url_line:
-        paragraphs = markdown.split("\n\n")
-        paragraphs_with_url = [f"{url_line}\n\n{p}" if p.strip() else "" for p in paragraphs]
-        markdown = "\n\n".join(paragraphs_with_url)
-
-    return markdown
+        markdown = "\n\n".join(lines)
+        return markdown
+    except Exception as e:
+        markdown_logger.error(f"Error converting article to markdown: {e}", exc_info=True)
+        raise
 
 # Example usage for testing
 if __name__ == "__main__":

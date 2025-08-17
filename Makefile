@@ -10,7 +10,7 @@ install: venv
 
 # Run the main orchestrator using the venv
 run:
-	. venv/bin/activate && PYTHONPATH=. python src/main.py
+	PYTHONUNBUFFERED=1 . venv/bin/activate && PYTHONPATH=. python src/main.py
 
 # Test the utils module
 test-utils:
@@ -26,7 +26,7 @@ test-scraper:
 
 # Remove venv, __pycache__, and generated files (teardown)
 clean:
-	rm -rf venv __pycache__ src/__pycache__ articles/*.md logs/*
+	rm -rf venv __pycache__ src/__pycache__ articles/*.md logs/* article_hashes.json
 
 # Destroy everything (venv, cache, generated files) WITHOUT reinstalling dependencies
 destroy:
@@ -45,6 +45,10 @@ reset-all: reset reset-openai
 # Run all Python tests with pytest
 test:
 	. venv/bin/activate && PYTHONPATH=. pytest
+
+# Check vector store file statuses and errors
+vector-store-status:
+	. venv/bin/activate && OPENAI_API_KEY=$$OPENAI_API_KEY VECTOR_STORE_ID=$$VECTOR_STORE_ID python src/vector_store_status.py
 
 # Build Docker image (native architecture)
 docker-build:
