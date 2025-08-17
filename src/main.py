@@ -126,7 +126,7 @@ def main():
     print(f"Saved {len(md_names)} article names to {article_names_path}")
 
     # 5. Cleanup articles directory
-    # cleanup_articles_dir()
+    cleanup_articles_dir()
 
 def cleanup_articles_dir():
     """Delete all Markdown files in the articles directory."""
