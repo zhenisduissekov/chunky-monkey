@@ -106,7 +106,7 @@ def main():
         return
 
     print(f"Found {len(added) + len(updated)} new or updated articles:")
-    for f in added + updated:
+    # for f in added + updated:
         # print(f"  - {f.name}")
 
     # 3. Upload (calls uploader, which uploads all .md files in articles/)
