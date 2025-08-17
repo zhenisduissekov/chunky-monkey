@@ -80,7 +80,6 @@ docker run \
   -e ASSISTANT_ID=your-assistant-id \
   -e KNOWLEDGE_BASE_API_URL=https://support.optisigns.com/api/v2/help_center/en-us/articles.json \
   -e KNOWLEDGE_BASE_PAGE_SIZE=1 \
-  -e KNOWLEDGE_BASE_FILE_NUMBER=14 \
   -e LOG_LEVEL=INFO \
   -e SCRAPE_PERIOD="* * * * *" \
   your-dockerhub-username/your-image-name:latest
@@ -89,7 +88,7 @@ docker run \
 **Replace:**
 - `your-openai-api-key` with your actual OpenAI API key.
 - `your-assistant-id` with your OpenAI Assistant ID.
-- Adjust `KNOWLEDGE_BASE_API_URL`, `KNOWLEDGE_BASE_PAGE_SIZE`, `KNOWLEDGE_BASE_FILE_NUMBER`, `LOG_LEVEL`, and `SCRAPE_PERIOD` as needed for your deployment.
+- Adjust `KNOWLEDGE_BASE_API_URL`, `KNOWLEDGE_BASE_PAGE_SIZE`, `LOG_LEVEL`, and `SCRAPE_PERIOD` as needed for your deployment.
 - `your-dockerhub-username/your-image-name:latest` with your actual Docker image name and tag.
 
 #### Example (run every hour):
@@ -100,7 +99,6 @@ docker run \
   -e ASSISTANT_ID=asst_... \
   -e KNOWLEDGE_BASE_API_URL=https://support.optisigns.com/api/v2/help_center/en-us/articles.json \
   -e KNOWLEDGE_BASE_PAGE_SIZE=1 \
-  -e KNOWLEDGE_BASE_FILE_NUMBER=14 \
   -e LOG_LEVEL=INFO \
   -e SCRAPE_PERIOD="0 * * * *" \
   johndoe/chunky-monkey:latest
@@ -114,7 +112,6 @@ docker run \
 | `ASSISTANT_ID`             | The ID of your OpenAI Assistant                                    |
 | `KNOWLEDGE_BASE_API_URL`   | Knowledge base API endpoint (e.g., Zendesk articles endpoint)       |
 | `KNOWLEDGE_BASE_PAGE_SIZE` | Number of articles per page to fetch from the knowledge base        |
-| `KNOWLEDGE_BASE_FILE_NUMBER` | Number of files to process per run                                |
 | `LOG_LEVEL`                | Log level (e.g., INFO, DEBUG)                                      |
 | `SCRAPE_PERIOD`            | Cron schedule for running the scraper (e.g., `0 0 * * *` for daily) |
 

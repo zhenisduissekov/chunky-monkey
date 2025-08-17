@@ -14,8 +14,6 @@ import os
 import sys
 import hashlib
 import json
-import os
-from pathlib import Path
 from pathlib import Path
 from typing import Dict, Any, Optional
 
@@ -35,7 +33,7 @@ except ImportError:
 
 REQUIRED_ENV_VARS = [
     "OPENAI_API_KEY",
-    "OPENAI_ASSISTANT_ID",
+    "ASSISTANT_ID",
     "KNOWLEDGE_BASE_API_URL",
 ]
 
